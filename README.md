@@ -1,2 +1,2 @@
 # Terraform
-This is to preserver terraform code
+This is to preserve terraform code
