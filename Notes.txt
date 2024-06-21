@@ -1,0 +1,51 @@
+pipeline {
+  agent any
+  environment {
+    dotnet = 'C:\\Program Files\\dotnet\\dotnet.exe'
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scmGit(
+          branches: [
+            [name: 'GCM-BaseSetupPL']
+          ],
+          userRemoteConfigs: [
+            [credentialsId: '2b6f7d4b-0615-4aed-9ca7-2f814b029862',
+              url: 'https://github.com/MAKnowledgeServices/acuity-dts-gcm.git'
+            ]
+          ])
+      }
+    }
+    stage('Restore packages') {
+      steps {
+		bat "dotnet restore %WORKSPACE%\\GCMApi\\GCM.Api\\GCM.Api.csproj"
+      }
+    }
+    stage('Clean') {
+      steps {
+        bat "dotnet clean %WORKSPACE%\\GCMApi\\GCM.Api\\GCM.Api.csproj"
+      }
+    }
+
+    stage("Release") {
+      steps {
+        bat 'dotnet build %WORKSPACE%\\GCMApi\\GCM.Api\\GCM.Api.csproj /p:PublishProfile=" %WORKSPACE%\\Gcm.Api\\Properties\\PublishProfiles\\JenkinsProfile.pubxml" /p:Configuration=Release /p:DeployOnBuild=true /m'
+      }
+    }
+       stage('Deploy') {
+      steps {
+        // Deploy package to IIS
+        bat '"C:\\Program Files (x86)\\IIS\\Microsoft Web Deploy V3\\msdeploy.exe" -verb:sync -source:package="%WORKSPACE%\\GCMApi\\GCM.Api\\bin\\Release\\net6.0\\GCMAPI.zip" -dest:auto -setParam:"IIS Web Application Name"="10.90.130.209:8082//Gcmdev1Api//" -enableRule:DoNotDelete -allowUntrusted=true -enableRule:AppOffline'
+      }
+    }
+  }
+}
+
+
+D:\Jenkins\.jenkins\workspace\GCM-API>"C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" -verb:sync -source:package="D:\Jenkins\.jenkins\workspace\GCM-API\GCM-API\GCMApi\GCM.Api\bin\Release\net6.0\GCMAPI.zip" -dest:auto -setParam:"IIS Web Application Name"="10.90.130.209:8082//Gcmdev1Api//" -enableRule:DoNotDelete -allowUntrusted=true -enableRule:AppOffline 
+Error Code: ERROR_EXCEPTION_WHILE_CREATING_OBJECT
+More Information: Object of type 'package' and path 'D:\Jenkins\.jenkins\workspace\GCM-API\GCM-API\GCMApi\GCM.Api\bin\Release\net6.0\GCMAPI.zip' cannot be created.  Learn more at: https://go.microsoft.com/fwlink/?LinkId=221672#ERROR_EXCEPTION_WHILE_CREATING_OBJECT.
+Error: The Zip package 'D:\Jenkins\.jenkins\workspace\GCM-API\GCM-API\GCMApi\GCM.Api\bin\Release\net6.0\GCMAPI.zip' could not be loaded.
+Error: Could not find a part of the path 'D:\Jenkins\.jenkins\workspace\GCM-API\GCM-API\GCMApi\GCM.Api\bin\Release\net6.0\GCMAPI.zip'.
+Error count: 1.
